@@ -22,7 +22,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     maxRequestsPerMinute: 0,
     maxRequestsPerDayPerIp: 0,
     currentTime: '',
-    fakeStreaming: false,
     fakeStreamingInterval: 0,
     randomString: false,
     localVersion: '',
@@ -40,20 +39,20 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const logs = ref([])
   const isRefreshing = ref(false)
   const isConfigLoaded = ref(false)
-  
+
   // 添加模型相关状态
   const selectedModel = ref('all')
   const availableModels = ref([])
-  
+
   // 夜间模式状态
   const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
-  
+
   // 监听夜间模式变化，保存到localStorage
   watch(isDarkMode, (newValue) => {
     localStorage.setItem('darkMode', newValue)
     applyDarkMode(newValue)
   })
-  
+
   // 应用夜间模式
   function applyDarkMode(isDark) {
     if (isDark) {
@@ -62,14 +61,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
       document.documentElement.classList.remove('dark-mode')
     }
   }
-  
+
   // 初始应用夜间模式
   applyDarkMode(isDarkMode.value)
 
   // 获取仪表盘数据
   async function fetchDashboardData() {
     if (isRefreshing.value) return // 防止重复请求
-    
+
     isRefreshing.value = true
     try {
       const response = await fetch('/api/dashboard-data')
@@ -102,7 +101,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     if (data.calls_time_series) {
       timeSeriesData.value.calls = data.calls_time_series
     }
-    
+
     if (data.tokens_time_series) {
       timeSeriesData.value.tokens = data.tokens_time_series
     }
@@ -112,7 +111,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
       maxRequestsPerMinute: data.max_requests_per_minute || 0,
       maxRequestsPerDayPerIp: data.max_requests_per_day_per_ip || 0,
       currentTime: data.current_time || '',
-      fakeStreaming: data.fake_streaming || false,
       fakeStreamingInterval: data.fake_streaming_interval || 0,
       randomString: data.random_string || false,
       randomStringLength: data.random_string_length || 0,
@@ -145,7 +143,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
           return acc
         }, {})
       }))
-      
+
       // 提取所有可用的模型
       const models = new Set(['all']) // 始终包含"全部"选项
       data.api_key_stats.forEach(stat => {
@@ -156,7 +154,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         }
       })
       availableModels.value = Array.from(models)
-      
+
       // 如果当前选择的模型不在可用模型列表中，重置为"all"
       if (!availableModels.value.includes(selectedModel.value)) {
         selectedModel.value = 'all'
@@ -170,7 +168,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
     isConfigLoaded.value = true
   }
-  
+
   // 设置选择的模型
   function setSelectedModel(model) {
     selectedModel.value = model
@@ -198,7 +196,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       // 将驼峰命名转换为下划线命名
       const snakeCaseKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-      
+
       const response = await fetch('/api/update-config', {
         method: 'POST',
         headers: {
@@ -210,12 +208,12 @@ export const useDashboardStore = defineStore('dashboard', () => {
           password
         })
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.detail || '更新配置失败')
       }
-      
+
       const data = await response.json()
       return data
     } catch (error) {

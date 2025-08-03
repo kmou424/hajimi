@@ -1,23 +1,22 @@
 <script setup>
-import { useDashboardStore } from '../../../stores/dashboard'
-import { ref, reactive, watch } from 'vue'
+import { useDashboardStore } from "../../../stores/dashboard";
+import { ref, reactive, watch } from "vue";
 
-const dashboardStore = useDashboardStore()
+const dashboardStore = useDashboardStore();
 
 // Initialize localConfig with default structure
 const localConfig = reactive({
   searchMode: false,
-  searchPrompt: '',
+  searchPrompt: "",
   maxRetryNum: 0,
-  fakeStreaming: false,
   fakeStreamingInterval: 0,
   randomString: false,
   randomStringLength: 0,
   concurrentRequests: 1, // Default to 1 or a sensible minimum
   increaseConcurrentOnFailure: 0,
   maxConcurrentRequests: 1, // Default to 1 or a sensible minimum
-  maxEmptyResponses: 0
-})
+  maxEmptyResponses: 0,
+});
 
 const populatedFromStore = ref(false);
 
@@ -27,12 +26,12 @@ watch(
     storeSearchMode: dashboardStore.config.searchMode,
     storeSearchPrompt: dashboardStore.config.searchPrompt,
     storeMaxRetryNum: dashboardStore.config.maxRetryNum,
-    storeFakeStreaming: dashboardStore.config.fakeStreaming,
     storeFakeStreamingInterval: dashboardStore.config.fakeStreamingInterval,
     storeRandomString: dashboardStore.config.randomString,
     storeRandomStringLength: dashboardStore.config.randomStringLength,
     storeConcurrentRequests: dashboardStore.config.concurrentRequests,
-    storeIncreaseConcurrentOnFailure: dashboardStore.config.increaseConcurrentOnFailure,
+    storeIncreaseConcurrentOnFailure:
+      dashboardStore.config.increaseConcurrentOnFailure,
     storeMaxConcurrentRequests: dashboardStore.config.maxConcurrentRequests,
     storeMaxEmptyResponses: dashboardStore.config.maxEmptyResponses,
     configIsActuallyLoaded: dashboardStore.isConfigLoaded, // 观察加载状态
@@ -42,24 +41,24 @@ watch(
       localConfig.searchMode = newValues.storeSearchMode;
       localConfig.searchPrompt = newValues.storeSearchPrompt;
       localConfig.maxRetryNum = newValues.storeMaxRetryNum;
-      localConfig.fakeStreaming = newValues.storeFakeStreaming;
       localConfig.fakeStreamingInterval = newValues.storeFakeStreamingInterval;
       localConfig.randomString = newValues.storeRandomString;
       localConfig.randomStringLength = newValues.storeRandomStringLength;
       localConfig.concurrentRequests = newValues.storeConcurrentRequests;
-      localConfig.increaseConcurrentOnFailure = newValues.storeIncreaseConcurrentOnFailure;
+      localConfig.increaseConcurrentOnFailure =
+        newValues.storeIncreaseConcurrentOnFailure;
       localConfig.maxConcurrentRequests = newValues.storeMaxConcurrentRequests;
       localConfig.maxEmptyResponses = newValues.storeMaxEmptyResponses;
       populatedFromStore.value = true;
     }
   },
   { deep: true, immediate: true }
-)
+);
 
 // 保存组件配置
 async function saveComponentConfigs(passwordFromParent) {
   if (!passwordFromParent) {
-    return { success: false, message: '功能配置: 密码未提供' }
+    return { success: false, message: "功能配置: 密码未提供" };
   }
 
   let allSucceeded = true;
@@ -70,167 +69,177 @@ async function saveComponentConfigs(passwordFromParent) {
   for (const key of configKeys) {
     if (localConfig[key] !== dashboardStore.config[key]) {
       try {
-        await dashboardStore.updateConfig(key, localConfig[key], passwordFromParent);
+        await dashboardStore.updateConfig(
+          key,
+          localConfig[key],
+          passwordFromParent
+        );
         // 更新store中的值 - 仅在API调用成功后
         dashboardStore.config[key] = localConfig[key];
         individualMessages.push(`${key} 保存成功`);
       } catch (error) {
         allSucceeded = false;
-        individualMessages.push(`${key} 保存失败: ${error.message || '未知错误'}`);
+        individualMessages.push(
+          `${key} 保存失败: ${error.message || "未知错误"}`
+        );
       }
     }
   }
 
   if (allSucceeded && individualMessages.length === 0) {
     // 如果没有任何更改，也算成功，但提示用户
-    return { success: true, message: '功能配置: 无更改需要保存' };
+    return { success: true, message: "功能配置: 无更改需要保存" };
   }
 
   return {
     success: allSucceeded,
-    message: `功能配置: ${individualMessages.join('; ')}`
+    message: `功能配置: ${individualMessages.join("; ")}`,
   };
 }
 
 // 获取布尔值显示文本
 function getBooleanText(value) {
-  return value ? '启用' : '禁用'
+  return value ? "启用" : "禁用";
 }
 
 defineExpose({
   saveComponentConfigs,
-  localConfig
-})
+  localConfig,
+});
 </script>
 
 <template>
   <div class="features-config">
     <h3 class="section-title">功能配置</h3>
-    
+
     <div class="config-form">
       <!-- 布尔值配置项 -->
       <div class="config-row">
         <div class="config-group">
           <label class="config-label">联网搜索</label>
           <div class="toggle-wrapper">
-            <input type="checkbox" class="toggle" id="searchMode" v-model="localConfig.searchMode">
+            <input
+              type="checkbox"
+              class="toggle"
+              id="searchMode"
+              v-model="localConfig.searchMode"
+            />
             <label for="searchMode" class="toggle-label">
-              <span class="toggle-text">{{ getBooleanText(localConfig.searchMode) }}</span>
+              <span class="toggle-text">{{
+                getBooleanText(localConfig.searchMode)
+              }}</span>
             </label>
           </div>
         </div>
-        
-        <div class="config-group">
-          <label class="config-label">假流式响应</label>
-          <div class="toggle-wrapper">
-            <input type="checkbox" class="toggle" id="fakeStreaming" v-model="localConfig.fakeStreaming">
-            <label for="fakeStreaming" class="toggle-label">
-              <span class="toggle-text">{{ getBooleanText(localConfig.fakeStreaming) }}</span>
-            </label>
-          </div>
-        </div>
-        
+
         <div class="config-group">
           <label class="config-label">伪装信息</label>
           <div class="toggle-wrapper">
-            <input type="checkbox" class="toggle" id="randomString" v-model="localConfig.randomString">
+            <input
+              type="checkbox"
+              class="toggle"
+              id="randomString"
+              v-model="localConfig.randomString"
+            />
             <label for="randomString" class="toggle-label">
-              <span class="toggle-text">{{ getBooleanText(localConfig.randomString) }}</span>
+              <span class="toggle-text">{{
+                getBooleanText(localConfig.randomString)
+              }}</span>
             </label>
           </div>
         </div>
       </div>
-      
+
       <!-- 字符串配置项 -->
       <div class="config-row">
         <div class="config-group full-width">
           <label class="config-label">联网搜索提示</label>
-          <input 
-            type="text" 
-            class="config-input" 
-            v-model="localConfig.searchPrompt" 
+          <input
+            type="text"
+            class="config-input"
+            v-model="localConfig.searchPrompt"
             placeholder="请输入联网搜索提示"
-          >
+          />
         </div>
       </div>
-      
+
       <!-- 数值配置项第一行 -->
       <div class="config-row">
         <div class="config-group">
           <label class="config-label">最大重试次数</label>
-          <input 
-            type="number" 
-            class="config-input" 
-            v-model.number="localConfig.maxRetryNum" 
+          <input
+            type="number"
+            class="config-input"
+            v-model.number="localConfig.maxRetryNum"
             min="0"
-          >
+          />
         </div>
-        
+
         <div class="config-group">
           <label class="config-label">假流式间隔(秒)</label>
-          <input 
-            type="number" 
-            class="config-input" 
-            v-model.number="localConfig.fakeStreamingInterval" 
+          <input
+            type="number"
+            class="config-input"
+            v-model.number="localConfig.fakeStreamingInterval"
             min="0"
             step="0.1"
-          >
+          />
         </div>
-        
+
         <div class="config-group">
           <label class="config-label">伪装信息长度</label>
-          <input 
-            type="number" 
-            class="config-input" 
-            v-model.number="localConfig.randomStringLength" 
+          <input
+            type="number"
+            class="config-input"
+            v-model.number="localConfig.randomStringLength"
             min="0"
-          >
+          />
         </div>
       </div>
-      
+
       <!-- 数值配置项第二行 -->
       <div class="config-row">
         <div class="config-group">
           <label class="config-label">默认并发请求数</label>
-          <input 
-            type="number" 
-            class="config-input" 
-            v-model.number="localConfig.concurrentRequests" 
+          <input
+            type="number"
+            class="config-input"
+            v-model.number="localConfig.concurrentRequests"
             min="1"
-          >
+          />
         </div>
-        
+
         <div class="config-group">
           <label class="config-label">失败时增加并发数</label>
-          <input 
-            type="number" 
-            class="config-input" 
-            v-model.number="localConfig.increaseConcurrentOnFailure" 
+          <input
+            type="number"
+            class="config-input"
+            v-model.number="localConfig.increaseConcurrentOnFailure"
             min="0"
-          >
+          />
         </div>
-        
+
         <div class="config-group">
           <label class="config-label">最大并发请求数</label>
-          <input 
-            type="number" 
-            class="config-input" 
-            v-model.number="localConfig.maxConcurrentRequests" 
+          <input
+            type="number"
+            class="config-input"
+            v-model.number="localConfig.maxConcurrentRequests"
             min="1"
-          >
+          />
         </div>
       </div>
-      
+
       <!-- 数值配置项第三行 -->
       <div class="config-row">
         <div class="config-group">
           <label class="config-label">空响应重试限制</label>
-          <input 
-            type="number" 
-            class="config-input" 
-            v-model.number="localConfig.maxEmptyResponses" 
+          <input
+            type="number"
+            class="config-input"
+            v-model.number="localConfig.maxEmptyResponses"
             min="0"
-          >
+          />
         </div>
         <!-- 可以根据需要在此行添加更多配置项 -->
         <div class="config-group"></div>
@@ -255,7 +264,7 @@ defineExpose({
 }
 
 .section-title::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -337,7 +346,7 @@ defineExpose({
 }
 
 .toggle-label::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 36px;
   height: 20px;
@@ -349,7 +358,7 @@ defineExpose({
 }
 
 .toggle-label::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 3px;
   width: 14px;
@@ -377,7 +386,7 @@ defineExpose({
   .config-row {
     gap: 10px;
   }
-  
+
   .config-group {
     min-width: 100px;
   }
@@ -389,13 +398,13 @@ defineExpose({
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .config-group {
     width: 100%;
   }
-  
+
   .config-form {
     padding: 15px;
   }
 }
-</style> 
+</style>

@@ -1,131 +1,131 @@
 <script setup>
-import { useDashboardStore } from '../../../stores/dashboard'
-import { ref, reactive } from 'vue'
+import { useDashboardStore } from "../../../stores/dashboard";
+import { ref, reactive } from "vue";
 
-const dashboardStore = useDashboardStore()
+const dashboardStore = useDashboardStore();
 
 // 创建本地配置副本用于编辑
 const localConfig = reactive({
-  fakeStreaming: dashboardStore.config.fakeStreaming,
   enableVertexExpress: dashboardStore.config.enableVertexExpress,
-  vertexExpressApiKey: dashboardStore.config.vertexExpressApiKey || '',
-  googleCredentialsJson: dashboardStore.config.googleCredentialsJson || ''
-})
+  vertexExpressApiKey: dashboardStore.config.vertexExpressApiKey || "",
+  googleCredentialsJson: dashboardStore.config.googleCredentialsJson || "",
+});
 
 // 密码和错误信息
-const password = ref('')
-const errorMsg = ref('')
-const successMsg = ref('')
-const isSaving = ref(false)
+const password = ref("");
+const errorMsg = ref("");
+const successMsg = ref("");
+const isSaving = ref(false);
 
 // 保存所有配置
 async function saveAllConfigs() {
   if (!password.value) {
-    errorMsg.value = '请输入密码'
-    return
+    errorMsg.value = "请输入密码";
+    return;
   }
 
-  isSaving.value = true
-  errorMsg.value = ''
-  successMsg.value = ''
+  isSaving.value = true;
+  errorMsg.value = "";
+  successMsg.value = "";
 
   try {
     // 逐个保存配置项
-    const configKeys = Object.keys(localConfig)
+    const configKeys = Object.keys(localConfig);
     for (const key of configKeys) {
       // 如果配置有变化才更新
       if (localConfig[key] !== dashboardStore.config[key]) {
-        await dashboardStore.updateConfig(key, localConfig[key], password.value)
+        await dashboardStore.updateConfig(
+          key,
+          localConfig[key],
+          password.value
+        );
         // 更新store中的值
-        dashboardStore.config[key] = localConfig[key]
+        dashboardStore.config[key] = localConfig[key];
       }
     }
-    successMsg.value = '所有配置已保存'
+    successMsg.value = "所有配置已保存";
   } catch (error) {
-    errorMsg.value = error.message || '保存失败'
+    errorMsg.value = error.message || "保存失败";
   } finally {
-    isSaving.value = false
+    isSaving.value = false;
   }
 }
 
 // 获取布尔值显示文本
 function getBooleanText(value) {
-  return value ? '启用' : '禁用'
+  return value ? "启用" : "禁用";
 }
 </script>
 
 <template>
   <div class="vertex-config">
     <h3 class="section-title">Vertex 配置</h3>
-    
+
     <div class="config-form">
       <!-- 布尔值配置项 -->
       <div class="config-row">
         <div class="config-group">
-          <label class="config-label">假流式响应</label>
-          <div class="toggle-wrapper">
-            <input type="checkbox" class="toggle" id="fakeStreaming" v-model="localConfig.fakeStreaming">
-            <label for="fakeStreaming" class="toggle-label">
-              <span class="toggle-text">{{ getBooleanText(localConfig.fakeStreaming) }}</span>
-            </label>
-          </div>
-        </div>
-        
-        <div class="config-group">
           <label class="config-label">Vertex Express</label>
           <div class="toggle-wrapper">
-            <input type="checkbox" class="toggle" id="enableVertexExpress" v-model="localConfig.enableVertexExpress">
+            <input
+              type="checkbox"
+              class="toggle"
+              id="enableVertexExpress"
+              v-model="localConfig.enableVertexExpress"
+            />
             <label for="enableVertexExpress" class="toggle-label">
-              <span class="toggle-text">{{ getBooleanText(localConfig.enableVertexExpress) }}</span>
+              <span class="toggle-text">{{
+                getBooleanText(localConfig.enableVertexExpress)
+              }}</span>
             </label>
           </div>
         </div>
       </div>
-      
+
       <!-- API Key 配置项 -->
       <div class="config-row">
         <div class="config-group full-width">
           <label class="config-label">Vertex Express API密钥</label>
-          <input 
-            type="password" 
-            class="config-input" 
-            v-model="localConfig.vertexExpressApiKey" 
+          <input
+            type="password"
+            class="config-input"
+            v-model="localConfig.vertexExpressApiKey"
             placeholder="请输入 Vertex Express API密钥"
-          >
+          />
         </div>
       </div>
-      
+
       <!-- Google Credentials JSON 配置项 -->
       <div class="config-row">
         <div class="config-group full-width">
           <label class="config-label">Google Credentials JSON</label>
-          <textarea 
-            class="config-input text-area" 
-            v-model="localConfig.googleCredentialsJson" 
+          <textarea
+            class="config-input text-area"
+            v-model="localConfig.googleCredentialsJson"
             placeholder="请输入 Google Credentials JSON"
           ></textarea>
         </div>
       </div>
-      
+
       <!-- 保存区域 -->
       <div class="save-section">
         <div class="password-input">
-          <input 
-            type="password" 
-            v-model="password" 
-            placeholder="请输入管理密码" 
+          <input
+            type="password"
+            v-model="password"
+            placeholder="请输入管理密码"
             class="config-input"
-          >
+          />
         </div>
-        <button 
-          class="save-button" 
-          @click="saveAllConfigs" 
+        <button
+          class="save-button"
+          @click="saveAllConfigs"
           :disabled="isSaving"
         >
-          {{ isSaving ? '保存中...' : '保存所有配置' }}
+          {{ isSaving ? "保存中..." : "保存所有配置" }}
         </button>
       </div>
-      
+
       <!-- 消息提示 -->
       <div v-if="errorMsg" class="error-message">{{ errorMsg }}</div>
       <div v-if="successMsg" class="success-message">{{ successMsg }}</div>
@@ -145,7 +145,7 @@ function getBooleanText(value) {
 }
 
 .section-title::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -234,7 +234,7 @@ function getBooleanText(value) {
 }
 
 .toggle-label::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 36px;
   height: 20px;
@@ -246,7 +246,7 @@ function getBooleanText(value) {
 }
 
 .toggle-label::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 3px;
   width: 14px;
@@ -326,20 +326,20 @@ function getBooleanText(value) {
   .config-row {
     gap: 10px;
   }
-  
+
   .config-group {
     min-width: 100px;
   }
-  
+
   .save-section {
     flex-direction: column;
   }
-  
+
   .password-input {
     width: 100%;
     margin-bottom: 10px;
   }
-  
+
   .save-button {
     width: 100%;
   }
@@ -351,13 +351,13 @@ function getBooleanText(value) {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .config-group {
     width: 100%;
   }
-  
+
   .config-form {
     padding: 15px;
   }
 }
-</style> 
+</style>

@@ -3,7 +3,7 @@ from typing import Optional, Union
 from fastapi import APIRouter, Body, HTTPException, Path, Query, Request, Depends, status, Header
 from fastapi.responses import StreamingResponse
 from app.services import GeminiClient
-from app.utils import protect_from_abuse,generate_cache_key,openAI_from_text,log
+from app.utils import protect_from_abuse,generate_cache_key,openAI_from_text,log,process_fake_stream_request
 from app.utils.response import openAI_from_Gemini
 from app.utils.auth import custom_verify_password
 from .stream_handlers import process_stream_request
@@ -24,7 +24,6 @@ active_requests_manager = None
 safety_settings = None
 safety_settings_g2 = None
 current_api_key = None
-FAKE_STREAMING = None
 FAKE_STREAMING_INTERVAL = None
 PASSWORD = None
 MAX_REQUESTS_PER_MINUTE = None
@@ -38,7 +37,6 @@ def init_router(
     _safety_settings,
     _safety_settings_g2,
     _current_api_key,
-    _fake_streaming,
     _fake_streaming_interval,
     _password,
     _max_requests_per_minute,
@@ -46,7 +44,7 @@ def init_router(
 ):
     global key_manager, response_cache_manager, active_requests_manager
     global safety_settings, safety_settings_g2, current_api_key
-    global FAKE_STREAMING, FAKE_STREAMING_INTERVAL
+    global FAKE_STREAMING_INTERVAL
     global PASSWORD, MAX_REQUESTS_PER_MINUTE, MAX_REQUESTS_PER_DAY_PER_IP
     
     key_manager = _key_manager
@@ -55,7 +53,6 @@ def init_router(
     safety_settings = _safety_settings
     safety_settings_g2 = _safety_settings_g2
     current_api_key = _current_api_key
-    FAKE_STREAMING = _fake_streaming
     FAKE_STREAMING_INTERVAL = _fake_streaming_interval
     PASSWORD = _password
     MAX_REQUESTS_PER_MINUTE = _max_requests_per_minute
@@ -93,6 +90,7 @@ async def get_cache(cache_key,is_stream: bool,is_gemini=False):
     return None
 
 @router.get("/aistudio/models",response_model=ModelList)
+@router.get("/fake-stream/aistudio/models",response_model=ModelList)
 async def aistudio_list_models(_ = Depends(custom_verify_password),
                                _2 = Depends(verify_user_agent)):
     if settings.WHITELIST_MODELS:
@@ -102,6 +100,7 @@ async def aistudio_list_models(_ = Depends(custom_verify_password),
     return ModelList(data=[{"id": model, "object": "model", "created": 1678888888, "owned_by": "organization-owner"} for model in filtered_models])
 
 @router.get("/vertex/models",response_model=ModelList)
+@router.get("/fake-stream/vertex/models",response_model=ModelList)
 async def vertex_list_models(request: Request, 
                              _ = Depends(custom_verify_password),
                              _2 = Depends(verify_user_agent)):
@@ -111,6 +110,8 @@ async def vertex_list_models(request: Request,
 # API路由
 @router.get("/v1/models",response_model=ModelList)
 @router.get("/models",response_model=ModelList)
+@router.get("/fake-stream/v1/models",response_model=ModelList)
+@router.get("/fake-stream/models",response_model=ModelList)
 async def list_models(request: Request,
                       _ = Depends(custom_verify_password),
                       _2 = Depends(verify_user_agent)):
@@ -119,12 +120,16 @@ async def list_models(request: Request,
     return await aistudio_list_models(_, _2)
 
 @router.post("/aistudio/chat/completions", response_model=ChatCompletionResponse)
+@router.post("/fake-stream/aistudio/chat/completions", response_model=ChatCompletionResponse)
 async def aistudio_chat_completions(
     request: Union[ChatCompletionRequest, AIRequest],
     http_request: Request,
     _ = Depends(custom_verify_password),
     _2 = Depends(verify_user_agent),
 ):
+    # 处理fake_stream参数设置
+    request = process_fake_stream_request(http_request, request)
+    
     format_type = getattr(request, 'format_type', None)
     if format_type and (format_type == "gemini"):
         is_gemini = True
@@ -261,12 +266,16 @@ async def aistudio_chat_completions(
         raise HTTPException(status_code=500, detail=f" hajimi 服务器内部处理时发生错误\n具体原因:{e}")
 
 @router.post("/vertex/chat/completions", response_model=ChatCompletionResponse)
+@router.post("/fake-stream/vertex/chat/completions", response_model=ChatCompletionResponse)
 async def vertex_chat_completions(
     request: ChatCompletionRequest, 
     http_request: Request,
     _dp = Depends(custom_verify_password),
     _du = Depends(verify_user_agent),
     ):
+    # 处理fake_stream参数设置
+    request = process_fake_stream_request(http_request, request)
+    
     # 使用vertex/routes/chat_api的实现
     
     # 转换消息格式
@@ -300,6 +309,8 @@ async def vertex_chat_completions(
 
 @router.post("/v1/chat/completions", response_model=ChatCompletionResponse)
 @router.post("/chat/completions", response_model=ChatCompletionResponse)
+@router.post("/fake-stream/v1/chat/completions", response_model=ChatCompletionResponse)
+@router.post("/fake-stream/chat/completions", response_model=ChatCompletionResponse)
 async def chat_completions(
     request: ChatCompletionRequest,
     http_request: Request,
@@ -307,11 +318,15 @@ async def chat_completions(
     _du = Depends(verify_user_agent),
 ):
     """处理API请求的主函数，根据需要处理流式或非流式请求"""
+    # 处理fake_stream参数设置
+    request = process_fake_stream_request(http_request, request)
+    
     if settings.ENABLE_VERTEX:
         return await vertex_chat_completions(request, http_request, _dp, _du)
     return await aistudio_chat_completions(request, http_request, _dp, _du)
 
 @router.post("/gemini/{api_version:str}/models/{model_and_responseType:path}")
+@router.post("/fake-stream/gemini/{api_version:str}/models/{model_and_responseType:path}")
 async def gemini_chat_completions(
     request: Request,
     model_and_responseType: str = Path(...),
@@ -331,6 +346,18 @@ async def gemini_chat_completions(
     except ValueError:
         raise HTTPException(status_code=400, detail="无效的请求路径")
     
+    # 检查是否是fake-stream路径
+    path = str(request.url.path)
+    is_fake_stream_path = path.startswith("/fake-stream")
+    
     geminiRequest = AIRequest(payload=payload,model=model_name,stream=is_stream,format_type='gemini')
+    
+    # 设置fake_stream参数
+    if hasattr(geminiRequest, 'fake_stream'):
+        geminiRequest.fake_stream = is_fake_stream_path
+    else:
+        # 如果AIRequest没有fake_stream属性，我们需要为其添加
+        setattr(geminiRequest, 'fake_stream', is_fake_stream_path)
+    
     return await aistudio_chat_completions(geminiRequest, request, _dp, _du)
         

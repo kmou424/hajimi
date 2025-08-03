@@ -150,7 +150,6 @@ async def get_dashboard_data():
         "remote_version": settings.version["remote_version"],
         "has_update": settings.version["has_update"],
         # 添加流式响应配置
-        "fake_streaming": settings.FAKE_STREAMING,
         "fake_streaming_interval": settings.FAKE_STREAMING_INTERVAL,
         # 添加随机字符串配置
         "random_string": settings.RANDOM_STRING,
@@ -269,21 +268,6 @@ async def update_config(config_data: dict):
             except ValueError as e:
                 raise HTTPException(status_code=422, detail=f"参数类型错误：{str(e)}")
                 
-        elif config_key == "fake_streaming":
-            if not isinstance(config_value, bool):
-                raise HTTPException(status_code=422, detail="参数类型错误：应为布尔值")
-            settings.FAKE_STREAMING = config_value
-            log('info', f"假流式请求已更新为：{config_value}")
-            
-            # 同步更新vertex配置中的假流式设置
-            try:
-                import app.vertex.config as vertex_config
-                vertex_config.FAKE_STREAMING_ENABLED = config_value  # 直接更新全局变量
-                vertex_config.update_config('FAKE_STREAMING', config_value)  # 同时调用更新函数
-                log('info', f"已同步更新Vertex中的假流式设置为：{config_value}")
-            except Exception as e:
-                log('warning', f"更新Vertex假流式设置时出错: {str(e)}")
-            
         elif config_key == "enable_vertex_express":
             if not isinstance(config_value, bool):
                 raise HTTPException(status_code=422, detail="参数类型错误：应为布尔值")

@@ -1,122 +1,131 @@
 <script setup>
-import { useDashboardStore } from '../../stores/dashboard'
-import { ref, watch } from 'vue'
-import BasicConfig from './config/BasicConfig.vue'
-import FeaturesConfig from './config/FeaturesConfig.vue'
-import VersionInfo from './config/VersionInfo.vue'
-import VertexConfig from './config/VertexConfig.vue'
+import { useDashboardStore } from "../../stores/dashboard";
+import { ref, watch } from "vue";
+import BasicConfig from "./config/BasicConfig.vue";
+import FeaturesConfig from "./config/FeaturesConfig.vue";
+import VersionInfo from "./config/VersionInfo.vue";
+import VertexConfig from "./config/VertexConfig.vue";
 
-const dashboardStore = useDashboardStore()
-const isExpanded = ref(true)
+const dashboardStore = useDashboardStore();
+const isExpanded = ref(true);
 
 // Refs for child components
-const basicConfigRef = ref(null)
-const featuresConfigRef = ref(null)
+const basicConfigRef = ref(null);
+const featuresConfigRef = ref(null);
 
 // Shared password and messaging
-const sharedPassword = ref('')
-const overallErrorMsg = ref('')
-const overallSuccessMsg = ref('')
-const isOverallSaving = ref(false)
+const sharedPassword = ref("");
+const overallErrorMsg = ref("");
+const overallSuccessMsg = ref("");
+const isOverallSaving = ref(false);
 
 // 配置项解释
 const configExplanations = {
-  maxRequestsPerMinute: '限制每个IP每分钟可以发送的最大请求数量，防止API被滥用',
-  maxRequestsPerDayPerIp: '限制每个IP每天可以发送的最大请求数量，防止API被滥用',
-  currentTime: '当前服务器时间，用于同步和调试',
-  fakeStreaming: '是否启用假流式响应，模拟流式返回效果',
-  fakeStreamingInterval: '假流式响应的间隔时间（秒），控制返回速度',
-  randomString: '是否启用随机字符串生成，用于伪装请求',
-  randomStringLength: '随机字符串的长度，用于伪装请求',
-  concurrentRequests: '默认并发请求数量，控制同时处理的请求数',
-  increaseConcurrentOnFailure: '请求失败时增加的并发数，提高成功率',
-  maxConcurrentRequests: '最大并发请求数量，防止系统过载',
-  localVersion: '当前系统版本号',
-  remoteVersion: '远程仓库最新版本号',
-  hasUpdate: '是否有可用更新',
-  searchMode: '是否启用联网搜索功能',
-  searchPrompt: '联网搜索提示',
-  enableVertexExpress: '是否启用Vertex Express模式',
-  vertexExpressApiKey: 'Vertex Express API密钥',
-  googleCredentialsJson: 'Google Credentials JSON'
-}
+  maxRequestsPerMinute: "限制每个IP每分钟可以发送的最大请求数量，防止API被滥用",
+  maxRequestsPerDayPerIp: "限制每个IP每天可以发送的最大请求数量，防止API被滥用",
+  currentTime: "当前服务器时间，用于同步和调试",
+  fakeStreamingInterval: "假流式响应的间隔时间（秒），控制返回速度",
+  randomString: "是否启用随机字符串生成，用于伪装请求",
+  randomStringLength: "随机字符串的长度，用于伪装请求",
+  concurrentRequests: "默认并发请求数量，控制同时处理的请求数",
+  increaseConcurrentOnFailure: "请求失败时增加的并发数，提高成功率",
+  maxConcurrentRequests: "最大并发请求数量，防止系统过载",
+  localVersion: "当前系统版本号",
+  remoteVersion: "远程仓库最新版本号",
+  hasUpdate: "是否有可用更新",
+  searchMode: "是否启用联网搜索功能",
+  searchPrompt: "联网搜索提示",
+  enableVertexExpress: "是否启用Vertex Express模式",
+  vertexExpressApiKey: "Vertex Express API密钥",
+  googleCredentialsJson: "Google Credentials JSON",
+};
 
 // 显示解释的工具提示
-const showTooltip = ref(false)
-const tooltipText = ref('')
-const tooltipPosition = ref({ x: 0, y: 0 })
+const showTooltip = ref(false);
+const tooltipText = ref("");
+const tooltipPosition = ref({ x: 0, y: 0 });
 
 function showExplanation(text, event) {
-  tooltipText.value = text
+  tooltipText.value = text;
   tooltipPosition.value = {
     x: event.clientX,
-    y: event.clientY
-  }
-  showTooltip.value = true
+    y: event.clientY,
+  };
+  showTooltip.value = true;
 }
 
 function hideTooltip() {
-  showTooltip.value = false
+  showTooltip.value = false;
 }
 
 // 获取折叠图标类
 const getFoldIconClass = (isVisible) => {
-  return isVisible ? 'fold-icon rotated' : 'fold-icon'
-}
+  return isVisible ? "fold-icon rotated" : "fold-icon";
+};
 
 // 保存所有配置 (Basic 和 Features)
 async function handleSaveAllConfigs() {
   if (!sharedPassword.value) {
-    overallErrorMsg.value = '请输入管理密码'
-    overallSuccessMsg.value = ''
-    return
+    overallErrorMsg.value = "请输入管理密码";
+    overallSuccessMsg.value = "";
+    return;
   }
 
-  isOverallSaving.value = true
-  overallErrorMsg.value = ''
-  overallSuccessMsg.value = ''
-  let errors = []
-  let successes = []
+  isOverallSaving.value = true;
+  overallErrorMsg.value = "";
+  overallSuccessMsg.value = "";
+  let errors = [];
+  let successes = [];
 
   try {
-    if (basicConfigRef.value && typeof basicConfigRef.value.saveComponentConfigs === 'function') {
-      const result = await basicConfigRef.value.saveComponentConfigs(sharedPassword.value)
+    if (
+      basicConfigRef.value &&
+      typeof basicConfigRef.value.saveComponentConfigs === "function"
+    ) {
+      const result = await basicConfigRef.value.saveComponentConfigs(
+        sharedPassword.value
+      );
       if (result.success) {
-        successes.push(result.message)
+        successes.push(result.message);
       } else {
-        errors.push(result.message)
+        errors.push(result.message);
       }
     } else {
       // console.warn('BasicConfig ref or saveComponentConfigs method not available');
     }
 
-    if (featuresConfigRef.value && typeof featuresConfigRef.value.saveComponentConfigs === 'function') {
-      const result = await featuresConfigRef.value.saveComponentConfigs(sharedPassword.value)
+    if (
+      featuresConfigRef.value &&
+      typeof featuresConfigRef.value.saveComponentConfigs === "function"
+    ) {
+      const result = await featuresConfigRef.value.saveComponentConfigs(
+        sharedPassword.value
+      );
       if (result.success) {
-        successes.push(result.message)
+        successes.push(result.message);
       } else {
-        errors.push(result.message)
+        errors.push(result.message);
       }
     } else {
       // console.warn('FeaturesConfig ref or saveComponentConfigs method not available');
     }
 
     if (errors.length > 0) {
-      overallErrorMsg.value = errors.join('; ')
-    } 
-    if (successes.length > 0 && errors.length === 0) {
-      overallSuccessMsg.value = '所有配置已成功保存: ' + successes.join('; ')
-    } else if (successes.length > 0 && errors.length > 0) {
-      overallSuccessMsg.value = '部分配置已保存: ' + successes.join('; ') + '. 部分失败.'
+      overallErrorMsg.value = errors.join("; ");
     }
-    
-    // Do not clear password after save attempt
+    if (successes.length > 0 && errors.length === 0) {
+      overallSuccessMsg.value = "所有配置已成功保存: " + successes.join("; ");
+    } else if (successes.length > 0 && errors.length > 0) {
+      overallSuccessMsg.value =
+        "部分配置已保存: " + successes.join("; ") + ". 部分失败.";
+    }
 
+    // Do not clear password after save attempt
   } catch (error) {
     // This catch block might be redundant if children handle their errors and return status
-    overallErrorMsg.value = error.message || '保存过程中发生意外错误'
+    overallErrorMsg.value = error.message || "保存过程中发生意外错误";
   } finally {
-    isOverallSaving.value = false
+    isOverallSaving.value = false;
   }
 }
 
@@ -135,27 +144,41 @@ async function handleSaveAllConfigs() {
       <VertexConfig />
       <VersionInfo />
     </div>
-    
+
     <!-- 非Vertex模式显示环境配置和折叠内容 -->
     <div v-else>
       <h3 class="section-title fold-header" @click="isExpanded = !isExpanded">
         ⚙️ 环境配置
         <span :class="getFoldIconClass(isExpanded)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </span>
       </h3>
-      
+
       <!-- 默认显示的简略配置 (只读) -->
       <div v-if="!isExpanded" class="stats-grid">
         <div class="stat-card">
-          <div class="stat-value">{{ dashboardStore.config.maxRequestsPerMinute }}</div>
+          <div class="stat-value">
+            {{ dashboardStore.config.maxRequestsPerMinute }}
+          </div>
           <div class="stat-label">每分钟请求限制</div>
           <!-- 编辑按钮已移除 -->
         </div>
         <div class="stat-card">
-          <div class="stat-value">{{ dashboardStore.config.concurrentRequests }}</div>
+          <div class="stat-value">
+            {{ dashboardStore.config.concurrentRequests }}
+          </div>
           <div class="stat-label">并发请求数</div>
           <!-- 编辑按钮已移除 -->
         </div>
@@ -164,46 +187,49 @@ async function handleSaveAllConfigs() {
           <div class="stat-label">当前服务器时间</div>
         </div>
       </div>
-      
+
       <!-- 展开后显示的所有配置项 -->
       <transition name="fold">
         <div v-if="isExpanded" class="fold-content">
           <BasicConfig ref="basicConfigRef" />
           <FeaturesConfig ref="featuresConfigRef" />
 
-
           <!-- Shared Save Section -->
           <div class="shared-save-section">
             <div class="password-input-group">
-              <label for="sharedPasswordInput" class="shared-password-label">管理密码</label>
-              <input 
-                type="password" 
-                id="sharedPasswordInput"
-                v-model="sharedPassword" 
-                placeholder="请输入管理密码以保存更改" 
-                class="config-input"
+              <label for="sharedPasswordInput" class="shared-password-label"
+                >管理密码</label
               >
+              <input
+                type="password"
+                id="sharedPasswordInput"
+                v-model="sharedPassword"
+                placeholder="请输入管理密码以保存更改"
+                class="config-input"
+              />
             </div>
-            <button 
-              class="save-all-button" 
-              @click="handleSaveAllConfigs" 
+            <button
+              class="save-all-button"
+              @click="handleSaveAllConfigs"
               :disabled="isOverallSaving"
             >
-              {{ isOverallSaving ? '保存中...' : '保存基本与功能配置' }}
+              {{ isOverallSaving ? "保存中..." : "保存基本与功能配置" }}
             </button>
           </div>
-          
-          <!-- Overall Messages -->
-          <div v-if="overallErrorMsg" class="overall-error-message">{{ overallErrorMsg }}</div>
-          <div v-if="overallSuccessMsg" class="overall-success-message">{{ overallSuccessMsg }}</div>
 
+          <!-- Overall Messages -->
+          <div v-if="overallErrorMsg" class="overall-error-message">
+            {{ overallErrorMsg }}
+          </div>
+          <div v-if="overallSuccessMsg" class="overall-success-message">
+            {{ overallSuccessMsg }}
+          </div>
         </div>
       </transition>
       <VersionInfo />
     </div>
-    
-    <!-- 旧的编辑对话框和工具提示已移除 -->
 
+    <!-- 旧的编辑对话框和工具提示已移除 -->
   </div>
 </template>
 
@@ -221,7 +247,7 @@ async function handleSaveAllConfigs() {
 }
 
 .info-box::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -259,7 +285,7 @@ async function handleSaveAllConfigs() {
 }
 
 .section-title::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -296,7 +322,7 @@ async function handleSaveAllConfigs() {
 }
 
 .stat-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -411,7 +437,7 @@ async function handleSaveAllConfigs() {
 }
 
 .edit-dialog-content::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -430,7 +456,7 @@ async function handleSaveAllConfigs() {
 }
 
 .edit-dialog-content h3::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -523,7 +549,7 @@ async function handleSaveAllConfigs() {
 }
 
 .edit-error::before {
-  content: '⚠️';
+  content: "⚠️";
   font-size: 14px;
 }
 
@@ -534,7 +560,8 @@ async function handleSaveAllConfigs() {
   margin-top: 20px;
 }
 
-.cancel-btn, .save-btn {
+.cancel-btn,
+.save-btn {
   padding: 10px 18px;
   border-radius: var(--radius-md);
   font-size: 14px;
@@ -601,26 +628,26 @@ async function handleSaveAllConfigs() {
   .stat-card {
     padding: 8px 8px;
   }
-  
+
   .stat-value {
     font-size: 16px;
   }
-  
+
   .stat-label {
     font-size: 12px;
     margin-top: 2px;
   }
-  
+
   .edit-btn {
     top: 3px;
     right: 3px;
     padding: 2px;
   }
-  
+
   .edit-dialog-content {
     padding: 20px;
   }
-  
+
   .boolean-selector {
     flex-direction: column;
     gap: 8px;
@@ -632,35 +659,36 @@ async function handleSaveAllConfigs() {
   .stat-card {
     padding: 6px 6px;
   }
-  
+
   .stat-value {
     font-size: 14px;
   }
-  
+
   .stat-label {
     font-size: 11px;
     margin-top: 1px;
   }
-  
+
   .tooltip {
     max-width: 200px;
     font-size: 10px;
   }
-  
+
   .edit-dialog-content {
     padding: 15px;
   }
-  
+
   .edit-dialog-content h3 {
     font-size: 1.1rem;
   }
-  
+
   .edit-input {
     padding: 10px 14px;
     font-size: 13px;
   }
-  
-  .cancel-btn, .save-btn {
+
+  .cancel-btn,
+  .save-btn {
     padding: 8px 14px;
     font-size: 13px;
   }
@@ -754,7 +782,8 @@ async function handleSaveAllConfigs() {
   font-weight: 500;
 }
 
-.config-input { /* Re-using existing class for consistency */
+.config-input {
+  /* Re-using existing class for consistency */
   width: 100%;
   padding: 10px 14px; /* Adjusted padding */
   border: 1px solid var(--color-border);

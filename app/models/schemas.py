@@ -10,6 +10,7 @@ class ChatCompletionRequest(BaseModel):
     top_k: Optional[float] = None
     n: int = 1
     stream: bool = False
+    fake_stream: bool = False
     stop: Optional[Union[str, List[str]]] = None
     max_tokens: Optional[int] = None
     presence_penalty: Optional[float] = 0.0
@@ -37,6 +38,7 @@ class AIRequest(BaseModel):
     payload: Optional[ChatRequestGemini] = None
     model: Optional[str] = None
     stream: bool = False
+    fake_stream: bool = False
     format_type: Optional[str] = "gemini"
 
 class Usage(BaseModel):

@@ -35,8 +35,12 @@ from app.vertex.api_helpers import (
 router = APIRouter()
 
 @router.post("/v1/chat/completions")
+@router.post("/fake-stream/v1/chat/completions")
 async def chat_completions(fastapi_request: Request, request: OpenAIRequest, api_key: str = Depends(get_api_key)):
     try:
+        # 处理fake_stream参数设置
+        from app.utils.request import process_fake_stream_request
+        request = process_fake_stream_request(fastapi_request, request)
         # 获取credential_manager，如果不存在则创建一个新的
         try:
             credential_manager_instance = fastapi_request.app.state.credential_manager
@@ -251,14 +255,10 @@ async def chat_completions(fastapi_request: Request, request: OpenAIRequest, api
             }
 
             if request.stream:
-                # 每次调用时直接从settings获取最新的FAKE_STREAMING值
-                fake_streaming_enabled = False
-                if hasattr(settings, 'FAKE_STREAMING'):
-                    fake_streaming_enabled = settings.FAKE_STREAMING
-                else:
-                    fake_streaming_enabled = app_config.FAKE_STREAMING_ENABLED
+                # 使用请求中的fake_stream参数而不是全局设置
+                fake_streaming_enabled = getattr(request, 'fake_stream', False)
                 
-                vertex_log('info', f"DEBUG: FAKE_STREAMING setting is {fake_streaming_enabled} for OpenAI model {request.model}")
+                vertex_log('info', f"DEBUG: fake_stream parameter is {fake_streaming_enabled} for OpenAI model {request.model}")
                 
                 if fake_streaming_enabled:
                     vertex_log('info', f"INFO: OpenAI Fake Streaming (SSE Simulation) ENABLED for model '{request.model}'.")

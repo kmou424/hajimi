@@ -1,6 +1,7 @@
 import asyncio
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Union
+from fastapi import Request
 from app.utils.logging import log
 
 class ActiveRequestsManager:
@@ -50,3 +51,41 @@ class ActiveRequestsManager:
         
         if long_running_keys:
             log('warning', f"取消长时间运行的任务: {len(long_running_keys)}个", cleanup='long_running_tasks')
+
+
+def process_fake_stream_request(http_request: Request, request_data: Union[Dict[str, Any], Any]) -> Union[Dict[str, Any], Any]:
+    """
+    处理请求的fake_stream参数设置
+    
+    Args:
+        http_request: FastAPI请求对象
+        request_data: 请求数据对象或字典
+        
+    Returns:
+        处理后的请求数据
+    """
+    try:
+        # 检查请求路径是否以 "/fake-stream" 开头
+        path = str(http_request.url.path)
+        is_fake_stream_path = path.startswith("/fake-stream")
+        
+        # 根据路径设置fake_stream参数
+        if hasattr(request_data, 'fake_stream'):
+            # 对于Pydantic模型，直接设置属性
+            request_data.fake_stream = is_fake_stream_path
+        elif isinstance(request_data, dict):
+            # 对于字典类型，设置键值
+            request_data['fake_stream'] = is_fake_stream_path
+        else:
+            # 尝试作为对象处理
+            try:
+                setattr(request_data, 'fake_stream', is_fake_stream_path)
+            except (AttributeError, TypeError):
+                log('warning', f"无法为请求数据设置fake_stream参数: {type(request_data)}")
+        
+        log('debug', f"请求路径: {path}, fake_stream设置为: {is_fake_stream_path}")
+        return request_data
+        
+    except Exception as e:
+        log('error', f"处理fake_stream请求时发生错误: {e}")
+        return request_data

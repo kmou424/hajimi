@@ -6,7 +6,6 @@ const dashboardStore = useDashboardStore()
 
 // 创建本地配置副本用于编辑
 const localConfig = reactive({
-  fakeStreaming: dashboardStore.config.fakeStreaming,
   enableVertexExpress: dashboardStore.config.enableVertexExpress,
   vertexExpressApiKey: dashboardStore.config.vertexExpressApiKey || '',
   googleCredentialsJson: dashboardStore.config.googleCredentialsJson || ''
@@ -61,16 +60,6 @@ function getBooleanText(value) {
     <div class="config-form">
       <!-- 布尔值配置项 -->
       <div class="config-row">
-        <div class="config-group">
-          <label class="config-label">假流式响应</label>
-          <div class="toggle-wrapper">
-            <input type="checkbox" class="toggle" id="fakeStreaming" v-model="localConfig.fakeStreaming">
-            <label for="fakeStreaming" class="toggle-label">
-              <span class="toggle-text">{{ getBooleanText(localConfig.fakeStreaming) }}</span>
-            </label>
-          </div>
-        </div>
-        
         <div class="config-group">
           <label class="config-label">Vertex Express</label>
           <div class="toggle-wrapper">

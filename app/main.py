@@ -211,7 +211,6 @@ async def startup_event():
         SAFETY_SETTINGS,
         SAFETY_SETTINGS_G2,
         first_valid_key,
-        settings.FAKE_STREAMING,
         settings.FAKE_STREAMING_INTERVAL,
         settings.PASSWORD,
         settings.MAX_REQUESTS_PER_MINUTE,

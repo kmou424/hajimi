@@ -132,6 +132,7 @@ async def refresh_models(credentials: HTTPAuthorizationCredentials = Depends(sec
         )
 
 @router.get("/v1/models")
+@router.get("/fake-stream/v1/models")
 async def list_models(fastapi_request: Request, api_key: str = Depends(get_api_key)):
     await refresh_models_config_cache()
     

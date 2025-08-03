@@ -253,14 +253,10 @@ async def execute_gemini_call(
     client_model_name_for_log = getattr(current_client, 'model_name', 'unknown_direct_client_object')
     print(f"INFO: execute_gemini_call for requested API model '{model_to_call}', using client object with internal name '{client_model_name_for_log}'. Original request model: '{request_obj.model}'")
 
-    # 每次调用时直接从settings获取最新的FAKE_STREAMING值
-    fake_streaming_enabled = False
-    if hasattr(settings, 'FAKE_STREAMING'):
-        fake_streaming_enabled = settings.FAKE_STREAMING
-    else:
-        fake_streaming_enabled = app_config.FAKE_STREAMING_ENABLED
+    # 使用请求中的fake_stream参数而不是全局设置
+    fake_streaming_enabled = getattr(request_obj, 'fake_stream', False)
     
-    print(f"DEBUG: FAKE_STREAMING setting is {fake_streaming_enabled} for model {request_obj.model}")
+    print(f"DEBUG: fake_stream parameter is {fake_streaming_enabled} for model {request_obj.model}")
 
     if request_obj.stream:
         if fake_streaming_enabled:
