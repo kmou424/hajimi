@@ -6,6 +6,7 @@ from app.utils.error_handling import handle_gemini_error, translate_error, handl
 from app.utils.rate_limiting import protect_from_abuse
 from app.utils.cache import ResponseCacheManager, generate_cache_key
 from app.utils.request import ActiveRequestsManager, process_fake_stream_request
+from app.utils.endpoint import get_custom_endpoint, parse_custom_headers
 from app.utils.stats import clean_expired_stats, update_api_call_stats
 from app.utils.version import check_version
 from app.utils.maintenance import handle_exception, schedule_cache_cleanup

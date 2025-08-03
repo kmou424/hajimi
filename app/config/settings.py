@@ -62,7 +62,7 @@ search={
     "search_prompt":os.environ.get("SEARCH_PROMPT", "（使用搜索工具联网搜索，需要在content中结合搜索内容）").strip('"')
 }
 
-#随机字符串
+# 随机字符串
 RANDOM_STRING = os.environ.get("RANDOM_STRING", "true").lower() in ["true", "1", "yes"]
 RANDOM_STRING_LENGTH = int(os.environ.get("RANDOM_STRING_LENGTH", "5"))
 
@@ -82,9 +82,9 @@ API_KEY_DAILY_LIMIT = int(os.environ.get("API_KEY_DAILY_LIMIT", "100"))# 默认�
 # 模型屏蔽黑名单，格式应为逗号分隔的模型名称集合
 BLOCKED_MODELS = { model.strip() for model in os.environ.get("BLOCKED_MODELS", "").split(",") if model.strip() }
 
-#公益站模式
+# 公益站模式
 PUBLIC_MODE = os.environ.get("PUBLIC_MODE", "false").lower() in ["true", "1", "yes"]
-#前端地址
+# 前端地址
 DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "")
 
 # 模型屏蔽白名单
@@ -138,3 +138,10 @@ FAKE_STREAMING_DELAY_PER_CHUNK = float(os.environ.get("FAKE_STREAMING_DELAY_PER_
 # 非流式请求TCP保活配置
 NONSTREAM_KEEPALIVE_ENABLED = os.environ.get("NONSTREAM_KEEPALIVE_ENABLED", "true").lower() in ["true", "1", "yes"]
 NONSTREAM_KEEPALIVE_INTERVAL = float(os.environ.get("NONSTREAM_KEEPALIVE_INTERVAL", "5.0"))
+
+# 自定义API端点配置
+CUSTOM_ENDPOINT = os.environ.get(
+    "CUSTOM_ENDPOINT", "https://generativelanguage.googleapis.com"
+).strip()
+# 自定义请求头配置 (格式: key1=val1;key2=val2)
+CUSTOM_HEADERS = os.environ.get("CUSTOM_HEADERS", "").strip()

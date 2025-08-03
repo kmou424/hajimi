@@ -10,6 +10,7 @@ import string
 import app.config.settings as settings
 
 from app.utils.logging import log
+from app.utils.endpoint import get_custom_endpoint, parse_custom_headers
 
 def generate_secure_random_string(length):
     all_characters = string.ascii_letters + string.digits
@@ -276,9 +277,11 @@ class GeminiClient:
         api_version, model, data = self._convert_request_data(request, contents, safety_settings, system_instruction)
         
         
-        url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model}:streamGenerateContent?key={self.api_key}&alt=sse"
+        base_endpoint = get_custom_endpoint()
+        url = f"{base_endpoint}/{api_version}/models/{model}:streamGenerateContent?key={self.api_key}&alt=sse"
         headers = {
             "Content-Type": "application/json",
+            **parse_custom_headers()
         }
         
         async with httpx.AsyncClient() as client:
@@ -321,9 +324,11 @@ class GeminiClient:
 
         api_version, model, data = self._convert_request_data(request, contents, safety_settings, system_instruction)
         
-        url = f"https://generativelanguage.googleapis.com/{api_version}/models/{model}:generateContent?key={self.api_key}"
+        base_endpoint = get_custom_endpoint()
+        url = f"{base_endpoint}/{api_version}/models/{model}:generateContent?key={self.api_key}"
         headers = {
             "Content-Type": "application/json",
+            **parse_custom_headers()
         }
         
         try:
