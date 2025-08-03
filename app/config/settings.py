@@ -2,7 +2,22 @@ import os
 import pathlib
 import logging
 from datetime import datetime, timedelta
-import asyncio 
+import asyncio
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+# 首先尝试加载当前工作目录的 .env 文件
+env_file_path = os.path.join(os.getcwd(), '.env')
+if os.path.exists(env_file_path):
+    load_dotenv(env_file_path)
+    print(f"✅ 已加载环境配置文件: {env_file_path}")
+else:
+    # 如果当前目录没有 .env，尝试默认加载
+    load_dotenv()
+    if os.path.exists('.env'):
+        print("✅ 已加载默认环境配置文件")
+    else:
+        print("ℹ️  未找到 .env 文件，使用默认配置或环境变量") 
 
 # ---------- 以下是基础配置信息 ----------
 
