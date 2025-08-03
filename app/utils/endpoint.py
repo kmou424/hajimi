@@ -35,7 +35,7 @@ def get_custom_endpoint() -> str:
             )
 
         endpoint = custom_endpoint.rstrip("/")
-        log("info", f"使用自定义API端点: {endpoint}")
+        log("info", f"使用自定义API(路径已隐藏): {parsed.scheme}://{parsed.netloc}")
         return endpoint
 
     except Exception as e:
