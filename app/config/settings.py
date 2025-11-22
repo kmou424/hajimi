@@ -176,3 +176,10 @@ NONSTREAM_KEEPALIVE_ENABLED = os.environ.get(
 NONSTREAM_KEEPALIVE_INTERVAL = float(
     os.environ.get("NONSTREAM_KEEPALIVE_INTERVAL", "5.0")
 )
+
+# 自定义API端点配置
+CUSTOM_ENDPOINT = os.environ.get(
+    "CUSTOM_ENDPOINT", "https://generativelanguage.googleapis.com"
+).strip()
+# 自定义请求头配置 (格式: key1=val1;key2=val2)
+CUSTOM_HEADERS = os.environ.get("CUSTOM_HEADERS", "").strip()

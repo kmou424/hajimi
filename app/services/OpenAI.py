@@ -9,6 +9,7 @@ import string
 import app.config.settings as settings
 
 from app.utils.logging import log
+from app.utils.endpoint import get_custom_endpoint, parse_custom_headers
 
 
 def generate_secure_random_string(length):
@@ -84,10 +85,12 @@ class OpenAIClient:
         }
         log("INFO", "流式请求开始", extra=extra_log)
 
-        url = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+        base_endpoint = get_custom_endpoint()
+        url = f"{base_endpoint}/v1beta/openai/chat/completions"
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
+            **parse_custom_headers()
         }
 
         async with httpx.AsyncClient() as client:
